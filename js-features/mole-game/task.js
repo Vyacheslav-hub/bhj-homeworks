@@ -1,87 +1,85 @@
 (() => {
-    let score = 0;
-    let misses = 0;
-    const totalMoles = 10;  // Количество необходимых убитых кротов для победы
-    const totalMisses = 5;   // Максимальное количество промахов до проигрыша
-    let activeHole = null;   // Хранит текущую активную лунку с кротом
-    let playing = true;      // Статус игры
-    let moleTimeout;         // Переменная для хранения таймера появления кротов
+    let deadCount = 0; // Количество убитых кротов
+    let lostCount = 0; // Количество промахов
+    const maxDead = 10; // Победа при 10 убитых кротах
+    const maxLost = 5; // Проигрыш при 5 промахах
+    let playing = true; // Игра в процессе
+    let activeHole; // Текущая лунка с кротом
 
-    const getHole = (index) => document.getElementById(`hole${index}`);
-    const updateStatus = () => {
-        document.getElementById('dead').innerText = score;
-        document.getElementById('lost').innerText = misses;
+    const deadCounter = document.getElementById('dead');
+    const lostCounter = document.getElementById('lost');
+
+    var bit = false; // Произошел ли удар по какой-либо лунке
+
+    // Функция для обновления счетчиков
+    const updateCounters = () => {
+        deadCounter.textContent = deadCount;
+        lostCounter.textContent = lostCount;
     };
 
-    const activateHole = (index) => {
-        getHole(index).classList.add('hole_has-mole');
-        activeHole = index;  // Устанавливаем активную лунку
-    };
-
-    const deactivateHole = (index) => {
-        getHole(index).classList.remove('hole_has-mole');
-        activeHole = null;  // Убираем активную лунку после деактивации
-    };
-
-    const randomHole = () => {
-        let hole;
-        do {
-            hole = Math.floor(Math.random() * 9) + 1;
-        } while (hole === activeHole);  // Гарантируем, что крот не появится в той же лунке
-        return hole;
-    };
-
-    const nextMole = () => {
-        if (!playing) return;  // Останавливаем появление новых кротов, если игра завершена
-
-        if (activeHole !== null) {
-            deactivateHole(activeHole);  // Убираем текущего крота перед появлением следующего
+    const checkCounter = () => {
+        if (deadCount === maxDead) {
+            alert('Победа! Вы убили 10 кротов!');
+            stop(); // Используем функцию stop из base.js
+            resetCounters(); // Обнуляем счетчики после завершения игры
         }
 
-        const newHole = randomHole();
-        activateHole(newHole);
-
-        moleTimeout = setTimeout(() => {
-            if (playing && activeHole === newHole) {  // Проверяем, активен ли еще крот
-                misses++;  // Если крот не был кликнут, увеличиваем промахи
-                updateStatus();
-                checkGameOver();
-                deactivateHole(newHole);  // Деактивируем крота, если по нему не кликнули
-            }
-            nextMole();  // Переход к следующему кроту, если игра продолжается
-        }, 1500);  // Время, через которое крот исчезает, если по нему не кликнули
-    };
-
-    const checkGameOver = () => {
-        if (misses >= totalMisses) {
-            playing = false;  // Останавливаем игру при поражении
-            clearTimeout(moleTimeout);  // Останавливаем таймер появления кротов
-            alert('Игра окончена! Вы набрали ' + score + ' очков.');
+        if (lostCount === maxLost) {
+            alert('Игра окончена. Вы промахнулись 5 раз.');
+            stop(); // Используем функцию stop из base.js
+            resetCounters(); // Обнуляем счетчики после завершения игры
         }
-    };
-
-    const handleClick = (index) => {
-        if (!playing || activeHole !== index) return;  // Игнорируем клик, если игра окончена или лунка неактивна
-
-        score++;  // Увеличиваем счет за успешный клик по кроту
-        updateStatus();
-        deactivateHole(index);  // Убираем крота моментально при успешном клике
-        checkVictory();
-    };
-
-    const checkVictory = () => {
-        if (score >= totalMoles) {
-            playing = false;  // Останавливаем игру при победе
-            clearTimeout(moleTimeout);  // Останавливаем таймер появления кротов
-            alert('Поздравляем! Вы убили ' + score + ' кротов!');
-        }
-    };
-
-    // Привязываем обработчики кликов к лункам
-    for (let i = 1; i <= 9; i++) {
-        getHole(i).addEventListener('click', () => handleClick(i));
     }
 
-    // Начинаем игру
-    nextMole();
+    // Обработчик кликов на лунки
+    const holes = document.querySelectorAll('.hole');
+    holes.forEach(hole => {
+        hole.addEventListener('click', () => {
+            bit = true;
+            if (!playing) return; // Проверка, что игра еще идет
+            
+            if (hole.classList.contains('hole_has-mole')) {
+                // Убили крота
+                deadCount++;
+                hole.classList.remove('hole_has-mole'); // Убираем крота
+            } else {
+                // Промах
+                if ([...holes].filter(item => item.classList.contains('hole_has-mole')).length) {
+                    lostCount++;
+                }
+                holes.forEach(item => item.classList.remove('hole_has-mole'));
+            }
+            
+            updateCounters(); // Обновляем счетчики
+
+            // Проверка на победу или поражение
+            checkCounter();
+        });
+    });
+
+    // Проверяем, если крот не был убит
+    const checkMoleMissed = () => {
+        if (activeHole !== undefined && !getHole(activeHole).classList.contains('hole_has-mole')) {
+            lostCount++;
+            updateCounters();
+        }
+        checkCounter();
+    };
+
+    // Функция для сброса счетчиков
+    const resetCounters = () => {
+        deadCount = 0;
+        lostCount = 0;
+        updateCounters(); // Обновляем счетчики после обнуления
+    };
+
+    // Запуск проверки, чтобы учитывать промахи
+    setInterval(() => {
+        if (!bit) {
+            lostCount++;
+            updateCounters();
+        }
+        bit = false;
+        checkMoleMissed();
+    }, 800);
 })();
