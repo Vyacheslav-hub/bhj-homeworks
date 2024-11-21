@@ -89,3 +89,18 @@ body {
 .product-shadow {
   position: absolute;
 }
+
+/* Анимация перемещения товара в корзину */
+.animated-product {
+  position: absolute;
+  z-index: 1000;
+  width: 100px; /* Изначальная ширина изображения */
+  height: 100px; /* Изначальная высота изображения */
+  object-fit: contain;
+  transition: all 1s ease-in-out; /* Плавное перемещение */
+}
+
+.animated-product:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
