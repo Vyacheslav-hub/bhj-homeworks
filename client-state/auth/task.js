@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () =>{
     const logoutBtn = document.querySelector('#logout__btn');
 
     // Проверяем, есть ли сохранённый ID пользователя в localStorage
-    const storedUserId = localStorage.getItem('user_id');
+    const storedUserId = getCookie('user_id');
         if(storedUserId) {
             displayWelcome(storedUserId);
         }
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () =>{
                 .then(response => response.json()) // Получаем ответ от сервера и парсим его как JSON
                 .then(data => { // Обрабатываем данные от сервера
                     if(data.success) {
-                        localStorage.setItem('user_id', data.user_id);
+                        setCookie('user_id', data.user_id, 7);
                         displayWelcome(data.user_id);
                         signinForm.reset();
                     }else {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () =>{
 
     // Обработчик нажатия кнопки "Выйти"
     logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('user_id');
+        deleteCookie('user_id');
         welcome.classList.remove('welcome_active');
         signin.classList.add('signin_active');
     })
@@ -57,5 +57,21 @@ document.addEventListener('DOMContentLoaded', () =>{
         signin.classList.remove('signin_active');
         welcome.classList.add('welcome_active');
         usersId.textContent = userId;
+    }
+
+    function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+            const cookies = document.cookie.split('; ');
+            const foundCookie = cookies.find(cookie => cookie.startsWith(`${name}=`));
+            return foundCookie ? foundCookie.split('=')[1] : null;
+    }
+
+    function deleteCookie(name){
+            document.cookie = `${name}=;expires=${new Date(0)};path=/`;
     }
 })
