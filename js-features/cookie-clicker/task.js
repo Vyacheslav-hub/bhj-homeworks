@@ -1,34 +1,42 @@
-let clicker__counter = 0; // Счётчик кликов
-let isLarge = false; // Флаг для отслеживания текущего размера печеньки
-let startTime = null; // Время первого клика
+const counterElement = document.getElementById("clicker__counter");
+const cookieElement = document.getElementById("cookie");
 
-function handleCookieClick() {
-    // Увеличиваем значение счётчика
-    clicker__counter++;
-    document.getElementById('clicker__counter').textContent = clicker__counter;
+let counter = 0;
+let click = false;
+let firstClick = true;
+let startTime;
 
-    // Если это первый клик, запоминаем время старта
-    if (!startTime) {
-        startTime = Date.now();
-    }
 
-    // Вычисляем прошедшее время в секундах
-    const elapsedTime = (Date.now() - startTime) / 1000; // Время в секундах
-
-    // Вычисляем скорость клика (клики / время)
-    const clickSpeed = (clicker__counter / elapsedTime).toFixed(2); // Округляем до 2 знаков
-    document.getElementById('clickSpeed').textContent = clickSpeed;
-
-    // Получаем элемент печеньки
-    const elementCookie = document.getElementById('cookie');
-
-    // Чередуем размер печеньки
-    if (isLarge) {
-        elementCookie.style.width = '200px';
-    } else {
-        elementCookie.style.width = '250px';
-    }
-
-    // Меняем флаг для чередования
-    isLarge = !isLarge;
+function counterClick () {
+    counter++;
+    counterElement.textContent = counter;
 }
+
+function cookieSize () {
+    cookieElement.width = 220;
+    click = true;
+}
+
+function averageCountClick () {
+    let timePassed = (Date.now() - startTime) / 1000;
+    let avgSpeed = counter / timePassed ;
+    document.getElementById("clicker__speed").textContent = Number(avgSpeed.toFixed(2));
+}
+
+cookieElement.onclick = () => {
+    if (firstClick) {
+        startTime = Date.now();
+        firstClick = false;
+    }
+
+        counterClick();
+        averageCountClick ();
+        if(!click) {
+            cookieSize();
+        }else {
+            cookieElement.width = 200;
+            click = false;
+        }
+}
+
+
