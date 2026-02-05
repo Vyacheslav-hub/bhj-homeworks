@@ -4,12 +4,10 @@ class Game {
     this.wordElement = container.querySelector('.word');
     this.winsElement = container.querySelector('.status__wins');
     this.lossElement = container.querySelector('.status__loss');
-    this.timerElement = container.querySelector('#timer');  // Добавили таймер
-    
-    this.timerInterval = null; //переменная для хранения идентификатора интервала, который используется для отсчёта времени. 
-                              //Нам нужно его хранить, чтобы сбрасывать таймер, когда пользователь завершает ввод слова или проигрывает.
+    this.timerElement = container.querySelector('.status__time');
+    this.timer;
+    this.symbolElements;
 
-    this.timeRemaining = 0; // переменная для хранения оставшегося времени на ввод текущего слова.
 
     this.reset();
 
@@ -23,15 +21,16 @@ class Game {
   }
 
   registerEvents() {
-    document.addEventListener('keydown', (event) => {
-      
-      const currentSymbol = this.currentSymbol.textContent;
+    document.addEventListener('keydown', (e) => {
+      let key = e.key.toLocaleLowerCase();
+        
+      if(!this.currentSymbol) return;
 
-      let inputSymbol = event.key;
+      if(key.length > 1) return;
 
-      if (inputSymbol.toLocaleLowerCase() === currentSymbol.toLocaleLowerCase()) {
-        this.success()
-      } else {
+      if(key === this.currentSymbol.textContent) {
+        this.success();
+      }else{
         this.fail();
       }
     })
@@ -46,28 +45,40 @@ class Game {
       this.currentSymbol.classList.add('symbol_current');
       return;
     }
-    
+
     if (++this.winsElement.textContent === 10) {
       alert('Победа!');
       this.reset();
     }
     this.setNewWord();
-    
   }
 
   fail() {
     if (++this.lossElement.textContent === 5) {
       alert('Вы проиграли!');
       this.reset();
-    } 
+    }
     this.setNewWord();
   }
 
   setNewWord() {
+    clearInterval(this.timer)
+
     const word = this.getWord();
+
     this.renderWord(word);
 
-    this.startTimer(word.length); // Запускаем таймер, зависящий от длины слова
+    this.timeLeft = this.symbolElements.length;
+
+    this.timer = setInterval(() => {
+      --this.timeLeft;
+
+      this.timerElement.textContent = this.timeLeft;
+
+      if(this.timeLeft === 0 && this.currentSymbol) {
+        this.fail();
+      }
+    }, 1000)
   }
 
   getWord() {
@@ -86,7 +97,7 @@ class Game {
       ],
       index = Math.floor(Math.random() * words.length);
 
-    return words[index];
+      return words[index];
   }
 
   renderWord(word) {
@@ -99,34 +110,8 @@ class Game {
     this.wordElement.innerHTML = html;
 
     this.currentSymbol = this.wordElement.querySelector('.symbol_current');
-  }
 
-  startTimer(seconds) {
-    this.timeRemaining = seconds;
-    this.timerElement.textContent = this.timeRemaining;
-
-    this.restartInterval();
-  }
-
-  startInterval() {
-    this.timerInterval = setInterval(() => {
-      this.timeRemaining--;
-      this.timerElement.textContent = this.timeRemaining;
-  
-      if (this.timeRemaining <= 0) {
-        this.fail(); // Если время истекло — вызываем fail
-        //this.stopInterval();
-      }
-    }, 1000); // Обновление таймера каждую секунду
-  }
-
-  stopInterval() {
-    clearInterval(this.timerInterval);
-  }
-
-  restartInterval() {
-    this.stopInterval();
-    this.startInterval();
+    this.symbolElements = this.wordElement.querySelectorAll('.symbol');
   }
 }
 

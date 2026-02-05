@@ -1,0 +1,16 @@
+.symbol {
+    font-size: 50px;
+}
+
+.symbol_correct {
+    color: green;
+}
+
+.symbol_current {
+    color: purple;
+}
+
+.word_incorrect {
+    background: red;
+    color: #fff;
+}  
