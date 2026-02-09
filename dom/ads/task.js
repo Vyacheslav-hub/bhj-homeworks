@@ -1,36 +1,30 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const rotatorCases = document.querySelectorAll('.rotator__case');
-    let activeIndex = 0;
-    let rotationTimeout;
+document.addEventListener('DOMContentLoaded', () => {
+    const rotators = document.querySelectorAll('.rotator');
 
-    function rotateText() {
-        // Сбрасываем активный класс у текущего элемента
-        rotatorCases[activeIndex].classList.remove('rotator__case_active');
+        rotators.forEach(rotator => {
+            function rotate () {
+            const rotatorElements = rotator.querySelectorAll('.rotator__case');
 
-        // Переходим к следующему элементу
-        activeIndex++;
+            const activeRotator = rotator.querySelector('.rotator__case_active');
 
-        // Если достигли конца списка, сбрасываем индекс на 0
-        if (activeIndex >= rotatorCases.length) {
-            activeIndex = 0;
-        }
+            activeRotator.classList.remove('rotator__case_active');
 
-        const nextCase = rotatorCases[activeIndex];
 
-        // Добавляем активный класс новому элементу
-        nextCase.classList.add('rotator__case_active');
+            let nextElement = activeRotator.nextElementSibling;
 
-        // Устанавливаем цвет текста и время смены из атрибутов data-color и data-speed
-        nextCase.style.color = nextCase.getAttribute('data-color');
-        const speed = nextCase.getAttribute('data-speed') || 1000;
+            if (!nextElement) {
+                nextElement = rotatorElements[0];
+            }
 
-        // Сбрасываем текущий таймер, чтобы не создавать накопление
-        clearTimeout(rotationTimeout);
 
-        // Устанавливаем новый таймер для смены элемента
-        rotationTimeout = setTimeout(rotateText, speed);
-    }
+            nextElement.style.color = nextElement.dataset.color;
 
-    // Запускаем ротатор
-    rotateText();
-});
+            nextElement.classList.add('rotator__case_active');
+
+            let speed = +nextElement.dataset.speed;
+
+            setTimeout(rotate,speed);
+            }
+            rotate();
+        })
+})
