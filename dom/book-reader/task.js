@@ -1,63 +1,69 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const book = document.getElementById("book");
-    const fontSizeControls = document.querySelectorAll(".font-size");
-    const textColorControls = document.querySelectorAll(".book__control_color .color");
-    const bgColorControls = document.querySelectorAll(".book__control_background .color");
+document.addEventListener('DOMContentLoaded', () => {
+    const book = document.querySelector('.book');
 
-    fontSizeControls.forEach(control => {
-        control.addEventListener("click", (event) => {
-            event.preventDefault();
+    function fsText() {
+        book.querySelector('.book__control_font-size').addEventListener('click', e => {
+            e.preventDefault();
 
-            // Удаляем класс font-size_active у всех кнопок
-            fontSizeControls.forEach(btn => btn.classList.remove("font-size_active"));
+            const fontButton = e.target.closest('.font-size');
 
-            // Добавляем класс font-size_active к текущей кнопке
-            control.classList.add("font-size_active");
+            if (!fontButton) return;
 
-            // Сбрасываем классы размера шрифта
-            book.classList.remove("book_fs-small", "book_fs-big");
 
-            // Применяем класс в зависимости от атрибута data-size
-            const fontSize = control.getAttribute("data-size");
-            if (fontSize === "small") {
-                book.classList.add("book_fs-small");
-            } else if (fontSize === "big") {
-                book.classList.add("book_fs-big");
+            book.querySelectorAll('.font-size').forEach(item => item.classList.remove('font-size_active'))
+
+            book.classList.remove('book_fs-small', 'book_fs-big');
+
+            fontButton.classList.add('font-size_active');
+
+            let fs = fontButton.dataset.size;
+
+            if (fs) {
+                book.classList.add(`book_fs-${fs}`)
             }
         });
-    });
+    }
 
-    // Управление цветом текста
-    textColorControls.forEach(control => {
-        control.addEventListener('click', (event) => {
-            event.preventDefault();
+    function colorText() {
+        book.querySelector('.book__control_color').addEventListener('click', e => {
+            e.preventDefault();
 
-            textColorControls.forEach(btn => btn.classList.remove('color_active'));
-            control.classList.add('color_active');
+            const colorButton = e.target.closest('.color');
 
-            book.classList.remove('book_color-black', 'book_color-gray', 'book_color-whitesmoke');
+            if (!colorButton) return;
 
-            const textColor = control.getAttribute('data-text-color');
-            if (textColor) {
-                book.classList.add(`book_color-${textColor}`);
-            }
-        });
-    });
+            book.querySelectorAll('.book__control_color .color').forEach(item => item.classList.remove('color_active'));
 
-    // Управление цветом фона
-    bgColorControls.forEach(control => {
-        control.addEventListener('click', (event) => {
-            event.preventDefault();
+           ['black', 'gray', 'whitesmoke'].forEach(color => book.classList.remove(`book_color-${color}`));
 
-            bgColorControls.forEach(btn => btn.classList.remove('color_active'));
-            control.classList.add('color_active');
+            colorButton.classList.add('color_active');
 
-            book.classList.remove('book_bg-gray', 'book_bg-black', 'book_bg-white');
+            let color = colorButton.dataset.textColor;
 
-            const bgColor = control.getAttribute('data-bg-color');
-            if (bgColor) {
-                book.classList.add(`book_bg-${bgColor}`);
-            }
-        });
-    });
-});
+            if (color) book.classList.add(`book_color-${color}`);
+        })
+    }
+
+    function bgText() {
+        book.querySelector('.book__control_background').addEventListener('click', e => {
+            e.preventDefault();
+
+            const bgButton = e.target.closest('.color');
+
+            if (!bgButton) return;
+
+            book.querySelectorAll('.book__control_background .color').forEach(item => item.classList.remove('color_active'));
+
+            ['black', 'gray', 'white'].forEach(bg => book.classList.remove(`book_bg-${bg}`));
+
+            bgButton.classList.add('color_active');
+
+            let bg = bgButton.dataset.bgColor;
+
+            if (bg) book.classList.add(`book_bg-${bg}`);
+        })
+    }
+    fsText();
+    colorText();
+    bgText()
+})
