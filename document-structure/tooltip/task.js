@@ -1,38 +1,58 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Слушаем все клики по элементам с классом "has-tooltip"
-    document.querySelectorAll('.has-tooltip').forEach((tooltipElement) => {
-        tooltipElement.addEventListener('click', (event) => {
-            event.preventDefault(); // Отключаем стандартное поведение ссылки
+let createTooltip;
+let activeElement = null;
 
-            // Проверяем, есть ли уже активная подсказка
-            const activeTooltip = document.querySelector('.tooltip_active');
-            if (activeTooltip) {
-                activeTooltip.remove(); // Удаляем её
-                if (activeTooltip === tooltipElement.nextElementSibling) {
-                    return; // Если кликнули по тому же элементу, больше ничего не делаем
-                }
-            }
+function createElementTooltip(element) {
+    createTooltip = document.createElement('div');
+    createTooltip.classList.add('tooltip', 'tooltip_active');
+    createTooltip.textContent = element.getAttribute('title');
+    document.body.append(createTooltip);
+    getRect(element);
+}
+function getRect (element) {
+    const rectHasTooltip = element.getBoundingClientRect();
+    const rectCreateElement = createTooltip.getBoundingClientRect();
+    createTooltip.style.position = 'absolute';
 
-            // Создаём новую подсказку
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip tooltip_active';
-            tooltip.textContent = tooltipElement.title;
-            document.body.appendChild(tooltip);
+    let top = rectHasTooltip.bottom + window.scrollY;
+    let left = rectHasTooltip.left + (rectHasTooltip.width / 2) - (rectCreateElement.width / 2);
 
-            // Определяем положение подсказки относительно элемента
-            const { top, left, height } = tooltipElement.getBoundingClientRect();
-            tooltip.style.top = `${top + height}px`;
-            tooltip.style.left = `${left}px`;
-        });
-    });
+    const rectData = element.dataset.position;
 
-    // Удаляем подсказку при клике вне элементов с подсказками
-    document.addEventListener('click', (event) => {
-        if (!event.target.classList.contains('has-tooltip')) {
-            const activeTooltip = document.querySelector('.tooltip_active');
-            if (activeTooltip) {
-                activeTooltip.remove();
-            }
-        }
-    });
+    if (rectData === 'top') {
+        top = rectHasTooltip.top - rectCreateElement.height  + window.scrollY;
+    }
+
+    if (rectData === 'right') {
+        top = rectHasTooltip.top + (rectHasTooltip.height / 2) - (rectCreateElement.height / 2);
+        left = rectHasTooltip.left + rectHasTooltip.width + window.scrollX;
+    }
+
+    if (rectData === 'left') {
+        top = rectHasTooltip.top + (rectHasTooltip.height / 2) - (rectCreateElement.height / 2);
+        left = rectHasTooltip.left - rectCreateElement.width + window.scrollX;
+    }
+
+    createTooltip.style.top = top + 'px';
+    createTooltip.style.left = left + 'px';
+}
+
+document.body.addEventListener('click', e => {
+    const hasTooltip = e.target.closest('.has-tooltip');
+    if (!hasTooltip) return;
+
+    e.preventDefault();
+
+    if (createTooltip && activeElement === hasTooltip) {
+        createTooltip.remove();
+        createTooltip = null;
+        activeElement = null;
+        return;
+    }
+
+    if (createTooltip) createTooltip.remove();
+
+    createElementTooltip(hasTooltip);
+    activeElement = hasTooltip;
+});
 });
