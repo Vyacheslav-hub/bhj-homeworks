@@ -5,11 +5,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 110px;
 }
 
 .cart__product {
   position: relative;
 }
+
 .cart__product-count {
   position: absolute;
   top: 0;
@@ -25,6 +27,24 @@ body {
   width: 100px;
   height: 100px;
   object-fit: contain;
+}
+
+.cart__product-remove {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 26px;
+  background-image: url('./icon/icon-basket.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  cursor: pointer;
+}
+
+.cart__product-remove:hover {
+  opacity: 0.7;
 }
 .product {
   display: flex;
@@ -90,17 +110,3 @@ body {
   position: absolute;
 }
 
-/* Анимация перемещения товара в корзину */
-.animated-product {
-  position: absolute;
-  z-index: 1000;
-  width: 100px; /* Изначальная ширина изображения */
-  height: 100px; /* Изначальная высота изображения */
-  object-fit: contain;
-  transition: all 1s ease-in-out; /* Плавное перемещение */
-}
-
-.animated-product:hover {
-  cursor: pointer;
-  opacity: 0.8;
-}
