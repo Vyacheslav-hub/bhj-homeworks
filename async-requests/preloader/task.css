@@ -2,12 +2,18 @@ body {
   font-family: Arial;
 }
 .item {
-  display: flex;
+  font-size: 25px;
+  display: block;
+}
+.item-row {
+  display: flex;      /* одна строка: код, значение, валюта */
+  gap: 5px;           /* расстояние между колонками */
+  margin-bottom: 5px; /* расстояние между строками */
 }
 
 .item__code {
-  margin-right: 5px;
   font-weight: bold;
+  margin-right: 5px;
 }
 .item__value {
   margin-right: 5px;
