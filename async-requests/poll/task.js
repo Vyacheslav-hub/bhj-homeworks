@@ -1,86 +1,109 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const pollUrl = 'https://students.netoservices.ru/nestjs-backend/poll'; // URL для запросов
+document.addEventListener('DOMContentLoaded', async () => {
+    const titlePoll = document.querySelector('#poll__title');
+    const answersPoll = document.querySelector('#poll__answers');
+    let indexBtn;
+    let pollId;
+    let timer;
 
-    const pollTitleElement = document.getElementById('poll__title');
-    const pollAnswersElement = document.getElementById('poll__answers');
-
-// Функция загрузки данных опроса
-    async function loadPoll() {
+    await getFetchPoll();
+    async function getFetchPoll () {
         try {
-            const response = await fetch(pollUrl); // Отправляем GET-запрос для получения данных
-            if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`); // Если ответ неудачный, выбрасываем ошибку
-            }
+            const response = await fetch('https://students.netoservices.ru/nestjs-backend/poll');
 
-            const pollData = await response.json(); // Парсим ответ как JSON
-            renderPoll(pollData); // Передаем данные для отображения опроса
-        } catch (error) {
-            console.error('Ошибка загрузки данных опроса:', error); // Логируем ошибки
+            if (!response.ok) throw new Error(`Ошибка запроса опроса: ${response.status}`);
+
+            const polls = await response.json();
+
+            const data ={
+                id: polls.id,
+                title: polls.data.title,
+                answers: polls.data.answers,
+            };
+
+            pollId = data.id;
+
+            await renderTitle(data);
+            await renderAnswers(data);
+
+        }catch (e) {
+            console.error(`Ошибка запроса опроса: ${e.message}`);
+            throw e;
         }
     }
 
-// Функция отображения опроса
-    function renderPoll(data) {
-        pollTitleElement.textContent = data.data.title; // Устанавливаем заголовок опроса
-        pollAnswersElement.innerHTML = ''; // Очищаем контейнер с ответами
-
-        data.data.answers.forEach((answer, index) => {
-            const button = document.createElement('button'); // Создаем кнопку для каждого ответа
-            button.className = 'poll__answer'; // Добавляем CSS-класс
-            button.textContent = answer; // Устанавливаем текст кнопки
-
-            // Добавляем обработчик клика для голосования
-            button.addEventListener('click', () => {
-                handleVote(data.id, index); // Передаем ID опроса и индекс ответа
-            });
-
-            pollAnswersElement.appendChild(button); // Добавляем кнопку в контейнер
-        });
+     function renderTitle (data) {
+        titlePoll.textContent = '';
+        titlePoll.textContent = data.title;
     }
 
-// Функция обработки голосования
-    async function handleVote(pollId, answerIndex) {
-        alert('Спасибо, ваш голос засчитан!'); // Показываем сообщение пользователю
+    function renderAnswers (data){
+        answersPoll.innerHTML = '';
+        const {answers: answer} = data;
 
+        for (let i = 0; i <= answer.length - 1; i++) {
+            const btn = document.createElement('button');
+            btn.classList.add('poll__answer');
+            btn.textContent = answer[i];
+            answersPoll.append(btn);
+        }
+    }
+
+     answersPoll.addEventListener('click', (e) => {
+        const btn = e.target.closest('.poll__answer');
+
+        if (!btn) return;
+
+        const buttons = Array.from(answersPoll.querySelectorAll('.poll__answer'));
+
+        indexBtn = buttons.indexOf(btn);
+        alert('Спасибо, ваш голос засчитан!');
+         postFetchPoll ()
+    })
+
+    async function postFetchPoll (){
         try {
-            const params = new URLSearchParams({
-                vote: pollId, // ID опроса
-                answer: answerIndex, // Индекс выбранного ответа
-            });
-
-            const response = await fetch(pollUrl, {
-                method: 'POST', // Метод POST для отправки данных
+            const response = await fetch('https://students.netoservices.ru/nestjs-backend/poll', {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded', // Указываем заголовок
+                    'Content-type': 'application/x-www-form-urlencoded'
                 },
-                body: params.toString(), // Преобразуем параметры в строку
-            });
+                body: `vote=${pollId}&answer=${indexBtn}`
+            })
 
-            if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`); // Обрабатываем ошибки сервера
-            }
+            if (!response.ok) throw new Error(`Ошибка отправки запроса: ${response.status}`);
 
-            const resultData = await response.json(); // Получаем статистику голосования
-            renderResults(resultData.stat); // Отображаем результаты
-        } catch (error) {
-            console.error('Ошибка при отправке голосования:', error); // Логируем ошибки
+            const result = await response.json();
+
+            const data = result.stat.map(item => ({
+                answer: item.answer,
+                vote: item.votes,
+            }))
+
+            renderResult (data);
+        }catch (e) {
+            console.error(`Ошибка отправки запроса: ${e.message}`);
+            throw e;
         }
+
     }
 
-// Функция отображения результатов голосования
-    function renderResults(stat) {
-        pollAnswersElement.innerHTML = ''; // Очищаем контейнер
+    function renderResult (data) {
+        let count = 0;
+        answersPoll.innerHTML = '';
+        data.forEach(item => {
+            count += item.vote;
+        })
 
-        const totalVotes = stat.reduce((sum, item) => sum + item.votes, 0); // Считаем общее количество голосов
+        data.forEach(item => {
+            const percent = Math.round((item.vote / count) * 100)
 
-        stat.forEach((item) => {
-            const percentage = ((item.votes / totalVotes) * 100).toFixed(2); // Вычисляем процент голосов
-            const resultElement = document.createElement('div'); // Создаем элемент для результата
-            resultElement.innerHTML = `${item.answer}: <b>${percentage}%</b>`; // Форматируем результат
-            pollAnswersElement.appendChild(resultElement); // Добавляем элемент в контейнер
-        });
+            const div =document.createElement('div')
+            div.classList.add('poll__result')
+            div.textContent = `${item.answer}: ${percent}% (${item.vote})`
+            answersPoll.append(div)
+        })
+
+        clearTimeout(timer);
+        timer = setTimeout(getFetchPoll, 3000);
     }
-
-// Инициализация приложения
-    loadPoll(); // Загружаем опрос при запуске страницы
 })

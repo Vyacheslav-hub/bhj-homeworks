@@ -3,9 +3,23 @@ body {
 }
 
 .card {
-  width: 625px;
+  min-width: 1000px;
 }
 
 .poll__title {
   margin-bottom: 20px;
 }
+
+.poll__answers {
+  min-width: 400px;
+  display: flex;
+  gap: 20px;
+  cursor: pointer;
+}
+
+.poll__result {
+  min-width: 170px;
+}
+
+
+
