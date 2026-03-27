@@ -1,35 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
-    const progress = document.querySelector('#progress');
+    const form = document.querySelector('#form');
+    const progressElement = document.querySelector('#progress');
+    let timer;
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
 
         const formData = new FormData(form);
+
         const xhr = new XMLHttpRequest();
 
         xhr.open('POST', 'https://students.netoservices.ru/nestjs-backend/upload');
 
-        xhr.upload.addEventListener('progress', (event) => {
-            if(event.lengthComputable) {
-                const progressValue = event.loaded / event.total;
-                progress.value = progressValue;
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                progressElement.value = e.loaded / e.total;
             }
-        });
+        }
 
-        xhr.addEventListener('load', () => {
-            if(xhr.status >= 200 && xhr.status < 300) {
-                console.log(`Ответ сервера: ${xhr.responseText}`);
-                alert(`Файл успешно загружен`);
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                progressElement.value = 100
+                console.log('Файл отправлен');
+                form.reset();
+                clearTimeout(timer);
+                timer = setTimeout(() => progressElement.value = 0, 2000);
             }else {
-                console.log(`Ошибка: ${xhr.status} ${xhr.statusText}`);
-                alert(`Ошибка: ${xhr.status} ${xhr.statusText}`);
+                console.error(`Ошибка отправки файла: ${xhr.status}`);
             }
-        });
+        }
 
-        xhr.addEventListener('error', () => {
-            alert(`Ошибка соединения с сервером.`);
-        });
+        xhr.onerror = () => {
+            console.error('Ошибка отправки файла');
+        }
 
         xhr.send(formData);
     })
