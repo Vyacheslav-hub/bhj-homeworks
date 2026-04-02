@@ -1,21 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const editor = document.querySelector('#editor');
-    const clearButton = document.querySelector('#clear-button');
+    const textArea = document.querySelector('#editor');
 
-    // Загрузка текста из локального хранилища
-    const saveText = localStorage.getItem('textEditor');
-        if (saveText) {
-            editor.value = saveText;
-        }
+    textArea.value = localStorage.getItem('text') || '';
 
-        // Сохранение текста в локальное хранилище при вводе
-        editor.addEventListener('input', () => {
-            localStorage.setItem('textEditor', editor.value);
-        })
+    textArea.addEventListener('input', () => {
+       setText(textArea.value);
+    })
 
-        // Очистка содержимого текстового редактора
-        clearButton.addEventListener('click', () => {
-            editor.value = '';
-            localStorage.removeItem('textEditor');
-        })
+    document.querySelector('#remove').addEventListener('click', () => {
+        textArea.value = '';
+
+        setText(textArea.value)
+    })
+
+    function setText (value) {
+        localStorage.setItem('text', value)
+    }
 })
