@@ -45,3 +45,8 @@
   display: block;
   text-align: center;
 }
+
+#signout__btn {
+    margin-top: 20px;
+    width: 100px;
+}

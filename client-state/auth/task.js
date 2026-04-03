@@ -1,77 +1,88 @@
-document.addEventListener('DOMContentLoaded', () =>{
-    const signin = document.querySelector('#signin');
-    const signinForm = document.querySelector('#signin__form');
-    const welcome = document.querySelector('#welcome');
-    const usersId = document.querySelector('#user_id');
-    const logoutBtn = document.querySelector('#logout__btn');
+document.addEventListener('DOMContentLoaded', () => {
+    const signinElement = document.querySelector('#signin');
+    const formSignin = document.querySelector('#signin__form');
+    const welcomeElement = document.querySelector('#welcome');
+    const signoutBtn = welcomeElement.querySelector('#signout__btn');
 
-    // Проверяем, есть ли сохранённый ID пользователя в localStorage
-    const storedUserId = getCookie('user_id');
-        if(storedUserId) {
-            displayWelcome(storedUserId);
+    const renderWelcome = (userId) => {
+        signinElement.classList.remove('signin_active');
+        welcomeElement.classList.add('welcome_active');
+        welcomeElement.querySelector('#user_id').textContent = userId;
+    };
+
+    const renderSignin = () => {
+        welcomeElement.classList.remove('welcome_active');
+        signinElement.classList.add('signin_active');
+        welcomeElement.querySelector('#user_id').textContent = '';
+    };
+
+    const setCookie = (name, value, second) => {
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; max-age=${second}; path=/`;
+    }
+
+    const getCookie = (name) => {
+        const cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.split('=');
+
+            if (key === encodeURIComponent(name)) {
+                return decodeURIComponent(value);
+            }
         }
 
-    // Обработчик отправки формы
-    signinForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+        return null;
+    }
 
-        const formData = new FormData(signinForm); // Создаём объект FormData из формы
-        const login = formData.get('login'); // Получаем логин
-        const password = formData.get('password'); // Получаем пароль
+    const deleteCookie = (name) => {
+        document.cookie = `${name}=; max-age=0; path=/`;
+    }
 
-            // Отправляем AJAX-запрос с данными формы
-            fetch(signinForm.action, {
+    const sendAuth= async () => {
+        try {
+            const formData = new FormData(formSignin);
+
+            const response = await fetch(
+                'https://students.netoservices.ru/nestjs-backend/auth',
+                {
                 method: 'POST',
-                body: JSON.stringify({login, password}), // Отправляем данные в формате JSON
-                headers: {                               // Указываем заголовок, чтобы сервер знал, что это JSON
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json()) // Получаем ответ от сервера и парсим его как JSON
-                .then(data => { // Обрабатываем данные от сервера
-                    if(data.success) {
-                        setCookie('user_id', data.user_id, 7);
-                        displayWelcome(data.user_id);
-                        signinForm.reset();
-                    }else {
-                        alert('Неверный логин/пароль');
-                        signinForm.reset();
-                    }
-                })
-                .catch(error => { // Если возникла ошибка при отправке запроса или обработке данных
-                    console.error(`Ошибка: ${error}`);
-                    alert(`Произошла ошибка при авторизации.`);
-                    signinForm.reset();
-                })
-        })
+                body: formData
+            });
 
-    // Обработчик нажатия кнопки "Выйти"
-    logoutBtn.addEventListener('click', () => {
-        deleteCookie('user_id');
-        welcome.classList.remove('welcome_active');
-        signin.classList.add('signin_active');
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+            const json = await response.json();
+
+            handleResponse(json);
+        }catch (e) {
+            console.error(`Ошибка отправки запроса: ${e}`)
+        }
+    }
+
+    const handleResponse = (response) => {
+        if (response.success) {
+            setCookie('user_id', response.user_id, 3600)
+            renderWelcome(response.user_id)
+            formSignin.reset();
+
+        } else {
+            alert(`Неверный логин/пароль`)
+            formSignin.reset();
+        }
+    }
+
+    formSignin.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendAuth();
     })
 
-    // Функция для отображения приветствия после успешной авторизации
-    function displayWelcome(userId) {
-        signin.classList.remove('signin_active');
-        welcome.classList.add('welcome_active');
-        usersId.textContent = userId;
-    }
+    signoutBtn.addEventListener('click', () => {
+        deleteCookie('user_id');
+        renderSignin();
+    })
 
-    function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
-    }
+    const savedUserId = getCookie('user_id');
 
-    function getCookie(name) {
-            const cookies = document.cookie.split('; ');
-            const foundCookie = cookies.find(cookie => cookie.startsWith(`${name}=`));
-            return foundCookie ? foundCookie.split('=')[1] : null;
+    if (savedUserId) {
+        renderWelcome(savedUserId)
     }
-
-    function deleteCookie(name){
-            document.cookie = `${name}=;expires=${new Date(0)};path=/`;
-    }
-})
+});
